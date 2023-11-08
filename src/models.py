@@ -1,39 +1,24 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
 
+
 Base = declarative_base()
-
-""" class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
-
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
-    id = Column(Integer, primary_key=True)
-    street_name = Column(String(250))
-    street_number = Column(String(250))
-    post_code = Column(String(250), nullable=False)
-    person_id = Column(Integer, ForeignKey('person.id'))
-    person = relationship(Person) """
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     user_name = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     name = Column(String, nullable=False)
     last_name = Column(String, nullable=True)
     email = Column(String, nullable=False)
+    active = Column(Boolean, default=False)
+
     
 
 class Character(Base):
@@ -41,13 +26,28 @@ class Character(Base):
       id = Column(Integer, primary_key=True)
       char_name = Column(String, nullable=False)
       planet_id = Column(Integer, ForeignKey('planet.id'), nullable=False)  # id del planeta de origen
-      planet = relationship("Planet")  # Relación con la tabla Planet
+      planet = relationship("Planet", back_populates="residents")  # Relación con la tabla Planet
+      biography = Column(String(120), default="")
+      avatar = Column(String(150), default="")
+      users_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)     
+
+
+class Species(Base):
+     __tablename__ = "specie"
+     id = Column(Integer, primary_key=True)
+     name = Column(String(20), default="")
+     language = Column(String, nullable=False)
+     characters = relationship("Character", back_populates="specie")  # Relación con la tabla Character 
+
 
 
 class Planet(Base):
      __tablename__ = "planet"
      id = Column(Integer, primary_key=True)
      planet_name = Column(String, nullable=False)
+     characters = relationship("Character", back_populates="planet")  # Relación con la tabla Character
+     residents = relationship("Character", back_populates="planet")  # Relación inversa con la tabla Character
+
 
 class Weapon(Base):
       __tablename__ = "weapon"
@@ -60,8 +60,8 @@ class Favorites(Base):
      id = Column(Integer, primary_key=True)
      user_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # id del user
      character_id = Column(Integer, ForeignKey('character.id'), nullable=False)  # id del characer
-     user = relationship("User")  # Relación con la tabla de user
-     character = relationship("Character")  # Relación con la tabla de personajes
+     user = relationship("User", back_populates="favorites")  # Relación con la tabla de user
+     character = relationship("Character", back_populates="favorites")  # Relación con la tabla de personajes
 
 
 class Post(Base):
