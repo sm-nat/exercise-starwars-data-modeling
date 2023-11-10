@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
@@ -18,6 +18,9 @@ class User(Base):
     last_name = Column(String, nullable=True)
     email = Column(String, nullable=False)
     active = Column(Boolean, default=False)
+    last_login = Column(DateTime())
+    post = relationship("post", backref="user")
+    post_id = Column(Integer, ForeignKey('post.id'), nullable=False) 
 
     
 
@@ -26,10 +29,14 @@ class Character(Base):
       id = Column(Integer, primary_key=True)
       char_name = Column(String, nullable=False)
       planet_id = Column(Integer, ForeignKey('planet.id'), nullable=False)  # id del planeta de origen
-      planet = relationship("Planet", back_populates="residents")  # Relación con la tabla Planet
+      planet = relationship("Planet", backref="residents")  # Relación con la tabla Planet
       biography = Column(String(120), default="")
       avatar = Column(String(150), default="")
       users_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)     
+      weapons = relationship("Weapon", backref="character")  # Relación con la tabla Weapon
+      specie = relationship("species", backref="character")
+      specie_id = Column(Integer, ForeignKey('specie.id'), nullable=False)
+
 
 
 class Species(Base):
@@ -37,7 +44,7 @@ class Species(Base):
      id = Column(Integer, primary_key=True)
      name = Column(String(20), default="")
      language = Column(String, nullable=False)
-     characters = relationship("Character", back_populates="specie")  # Relación con la tabla Character 
+     characters = relationship("Character", backref="species")  # Relación con la tabla Character 
 
 
 
@@ -45,14 +52,17 @@ class Planet(Base):
      __tablename__ = "planet"
      id = Column(Integer, primary_key=True)
      planet_name = Column(String, nullable=False)
-     characters = relationship("Character", back_populates="planet")  # Relación con la tabla Character
-     residents = relationship("Character", back_populates="planet")  # Relación inversa con la tabla Character
+     characters = relationship("Character", backref="planet")  # Relación con la tabla Character
+     residents = relationship("Character", backref="planet")  # Relación inversa con la tabla Character
 
 
 class Weapon(Base):
       __tablename__ = "weapon"
       id = Column(Integer, primary_key=True)
       weapon_name = Column(String, nullable=False)
+      character_id = Column(Integer, ForeignKey('character.id'))  # Agregar columna para la relación
+      character = relationship("Character", backref="weapon")  # Relación con la tabla Character
+
 
     
 class Favorites(Base):
@@ -60,8 +70,8 @@ class Favorites(Base):
      id = Column(Integer, primary_key=True)
      user_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # id del user
      character_id = Column(Integer, ForeignKey('character.id'), nullable=False)  # id del characer
-     user = relationship("User", back_populates="favorites")  # Relación con la tabla de user
-     character = relationship("Character", back_populates="favorites")  # Relación con la tabla de personajes
+     user = relationship("User", backref="favorites")  # Relación con la tabla de user
+     character = relationship("Character", backref="favorites")  # Relación con la tabla de personajes
 
 
 class Post(Base):
@@ -70,7 +80,7 @@ class Post(Base):
      title = Column(String, nullable=False)  # Título de la publicación
      content = Column(String, nullable=False)  # Contenido de la publicación
      author_id = Column(Integer, ForeignKey('user.id'), nullable=False)  # id del autor de la publicación
-     author = relationship("User")  # Relación con la tabla de usuarios (autor de la publicación)
+     user = relationship("User", backref="post")  # Relación con la tabla de usuarios de quien realizo el post
 
 
 def to_dict(self):
